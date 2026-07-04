@@ -47,4 +47,8 @@ class OllamaClient:
             for line in response.iter_lines():
                 if not line:
                     continue
-                yield json.loads(line)
+
+                data = json.loads(line)
+                if data.get("done"): 
+                    break
+                yield data["message"]["content"]

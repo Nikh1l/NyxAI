@@ -1,0 +1,11 @@
+Package            Version
+------------------ ---------
+certifi            2026.6.17
+charset-normalizer 3.4.7
+idna               3.18
+pip                26.1.2
+pypl               40.10
+PyYAML             6.0.3
+requests           2.34.2
+svgwrite           1.4.3
+urllib3            2.7.0
