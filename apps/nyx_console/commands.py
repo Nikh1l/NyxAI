@@ -37,9 +37,10 @@ def role_command(state: ConsoleState, args):
         return
 
     state.role = role
+    state.session.clear()
 
     print(f"Role changed to: {state.role.name}")
-    print(f"Model: {state.role.model}")
+    print("Started a new conversation.")
 
 
 COMMANDS = {

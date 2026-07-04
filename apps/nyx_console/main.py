@@ -1,64 +1,133 @@
-from core.ollama.client import OllamaClient
 from core.chat.session import ChatSession
 from core.config.settings import Settings
+from core.ollama.client import OllamaClient
 from core.roles.registry import RoleRegistry
+from core.capabilities.engineer.capability import EngineerCapability
 
 from .commands import COMMANDS
 from .state import ConsoleState
+from .ui import capability_banner
+
+def stream_response(stream, state):
+    assistant_message = ""
+
+    print("\n🤖 ", end="", flush=True)
+
+    for token in stream:
+        assistant_message += token
+        print(token, end="", flush=True)
+
+    print()
+
+    state.session.add_assistant_message(assistant_message)
+
 
 def main():
+
     settings = Settings()
+
     roles = RoleRegistry(settings)
-    for role in roles.all():
-        print(role)
+
     client = OllamaClient(settings.ollama_host)
+
     state = ConsoleState(
         session=ChatSession(),
         role=roles.get("assistant"),
         roles=roles
     )
 
+    engineer = EngineerCapability(
+        client,
+        roles.get("engineer")
+    )
+
     print("=" * 50)
     print("Nyx Console")
     print(f"Role: {state.role.name}")
     print(f"Model: {state.role.model}")
-    print("Type 'exit' to quit.")
+    print("Type '/help' for commands.")
     print("=" * 50)
 
     while True:
-        prompt = input("\nYou > ")
-        
+
+        prompt = input(f"\n[{state.role.name}] > ").strip()
+
+        if not prompt:
+            continue
+
+
+        # -----------------------------
+        # Slash Commands
+        # -----------------------------
         if prompt.startswith("/"):
+
             parts = prompt.split()
+
             command = parts[0]
             args = parts[1:]
 
             handler = COMMANDS.get(command)
 
-            if handler :
+            if handler:
+
                 should_exit = handler(state, args)
-                if should_exit :
-                    print("Exiting Nyx Console.")
+
+                if should_exit:
                     break
 
-            else: 
-                print(f"Unknown command: {command}. Type '/help' for a list of commands.")
+            else:
+                print(f"Unknown command: {command}")
 
-            continue        
+            continue
 
+        # -----------------------------
+        # Capability Commands
+        # engineer explain file.py
+        # engineer review file.py
+        # engineer tests file.py
+        # -----------------------------
+        parts = prompt.split(maxsplit=2)
+
+        if len(parts) == 3:
+
+            capability, action, target = parts
+
+            capability_banner(
+                capability,
+                action,
+                target,
+            )
+
+            if capability == "engineer":
+
+                if action == "explain":
+                    stream = engineer.explain(target)
+
+                elif action == "review":
+                    stream = engineer.review(target)
+
+                elif action == "tests":
+                    stream = engineer.tests(target)
+
+                else:
+                    print(f"Unknown engineer action: {action}")
+                    continue
+
+                stream_response(stream, state)
+                continue
+
+        # -----------------------------
+        # Normal Chat
+        # -----------------------------
         state.session.add_user_message(prompt)
 
-        assistant = ""
+        stream = client.stream_chat(
+            model=state.role.model,
+            messages=state.session.history(),
+        )
 
-        print("\n🤖 ", end="", flush=True)
+        stream_response(stream, state)
 
-        for token in client.stream_chat(model=state.role.model, messages=state.session.history()):
-            assistant += token
-            print(token, end="", flush=True)
-        
-        print()
-
-        state.session.add_assistant_message(assistant)
 
 
 
