@@ -88,30 +88,70 @@ def main():
         # -----------------------------
         parts = prompt.split(maxsplit=2)
 
-        if len(parts) == 3:
+        parts = prompt.split(maxsplit=2)
 
-            capability, action, target = parts
+        if len(parts) >= 2:
 
-            capability_banner(
-                capability,
-                action,
-                target,
-            )
+            capability = parts[0]
+            action = parts[1]
 
             if capability == "engineer":
 
-                if action == "explain":
-                    stream = engineer.explain(target)
+                if action == "ask":
 
-                elif action == "review":
-                    stream = engineer.review(target)
+                    if len(parts) != 3:
+                        print("Usage: engineer ask <question>")
+                        continue
 
-                elif action == "tests":
-                    stream = engineer.tests(target)
+                    question = parts[2]
+
+                    capability_banner(
+                        capability,
+                        action,
+                        question,
+                    )
+
+                    stream = engineer.ask(
+                        ".",
+                        question,
+                    )
 
                 else:
-                    print(f"Unknown engineer action: {action}")
-                    continue
+
+                    if len(parts) != 3:
+                        print(f"Usage: engineer {action} <path>")
+                        continue
+
+                    target = parts[2]
+
+                    capability_banner(
+                        capability,
+                        action,
+                        target,
+                    )
+
+                    if action == "explain":
+                        stream = engineer.explain(target)
+
+                    elif action == "review":
+                        stream = engineer.review(target)
+
+                    elif action == "tests":
+                        stream = engineer.tests(target)
+
+                    elif action == "search":
+                        if len(parts) != 3:
+                            print("Usage: engineer search <query>")
+                            continue
+                        files = engineer.search(".", parts[2])
+                        print()
+                        for file in files:
+                            print(file)
+                        continue
+
+                    else:
+                        print(f"Unknown engineer action: {action}")
+                        continue
 
                 stream_response(stream, state)
                 continue

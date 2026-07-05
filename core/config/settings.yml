@@ -10,3 +10,6 @@ models:
     model: "deepseek-r1:32b"
   fast: 
     model: "gemma3:12b"
+
+database:
+  url: "sqlite:///./creator.db"
