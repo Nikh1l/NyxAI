@@ -15,6 +15,7 @@ class InstagramClient:
             "thumbnail_url",
             "timestamp",
             "permalink",
+            "comments_count",
         ])
         self.COMMENT_FIELDS = ",".join([
             "id",
@@ -26,18 +27,23 @@ class InstagramClient:
     async def _get(self, endpoint: str, **params):
         params.setdefault("access_token", self.access_token)
 
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.get(
-                f"{self.BASE_URL}{endpoint}",
-                params=params,
-            )
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.get(
+                    f"{self.BASE_URL}{endpoint}",
+                    params=params,
+                )
 
-        if response.status_code >= 400:
-            print(response.text)
+            if response.status_code >= 400:
+                print(response.text)
 
-        response.raise_for_status()
+            response.raise_for_status()
 
-        return response.json()
+            return response.json()
+        except Exception as e:
+            print(type(e))
+            print(e)
+            raise
     
     async def _paginate(self ,endpoint: str ,fields: str ,limit: int = 100):
         items = []
@@ -82,9 +88,24 @@ class InstagramClient:
     )
     
     async def comments(self, media_id: str):
-        return await self._get(
+        return await self._paginate(
             f"/{media_id}/comments",
             fields=self.COMMENT_FIELDS,
-        )
-    
+    )
+
+    async def reply(self, comment_id: str, message: str):
+        endpoint = f"/{comment_id}/replies"
+
+        async with httpx.AsyncClient(timeout=30) as client:
+            response = await client.post(
+                f"{self.BASE_URL}{endpoint}",
+                data={
+                    "message": message,
+                    "access_token": self.access_token
+                },
+            )
+        
+        response.raise_for_status()
+        
+        return response.json()
         

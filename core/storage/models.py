@@ -73,6 +73,11 @@ class Media(Base):
         cascade="all, delete-orphan",
     )
 
+    comments_count: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+    )
+
 
 class Comment(Base):
     __tablename__ = "comments"
@@ -86,9 +91,15 @@ class Comment(Base):
         unique=True,
     )
 
-    author: Mapped[str]
+    author: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
 
-    text: Mapped[str] = mapped_column(Text)
+    text: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
     like_count: Mapped[int] = mapped_column(
         Integer,
