@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from apps.creator_dashboard.routes.health import router as health_router
+from apps.creator_dashboard.routes.instagram import router as instagram_router
 from core.storage import init_database
 
 @asynccontextmanager
@@ -25,3 +26,4 @@ app.add_middleware(
 )
 
 app.include_router(health_router)
+app.include_router(instagram_router)

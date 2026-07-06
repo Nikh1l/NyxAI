@@ -1,34 +1,21 @@
 from core.social.instagram.client import InstagramClient
+from core.social.instagram.repository import InstagramRepository
 from core.storage.database import SessionLocal
-from core.storage.models import Comment, Reply, ReplyStatus 
+
 
 class InstagramService:
 
-    def __init__(self, access_token: str):
-        self.client = InstagramClient(access_token)
-
-    async def post_reply(self, comment_id: str, message: str,):
-        result = await self.client.reply(
-            comment_id=comment_id,
-            message=message,
-        )
-
+    def list_media(self):
         with SessionLocal() as session:
-            comment = (
-                session.query(Comment)
-                .filter_by(
-                    platform_comment_id=comment_id
-                )
-                .first()
-            )
-
-            reply = Reply(
-                comment_id=comment.id,
-                draft=message,
-                posted=message,
-                status=ReplyStatus.POSTED
-            )
-
-            session.add(reply)
-            session.commit()
-        return result
+            repo = InstagramRepository(session)
+            return repo.list_media()
+        
+    def get_media(self, media_id: int):
+        with SessionLocal() as session:
+            repo = InstagramRepository(session)
+            return repo.get_media(media_id)
+        
+    def list_comments(self, media_id: int):
+        with SessionLocal() as session:
+            repo = InstagramRepository(session)
+            return repo.list_comments(media_id)
